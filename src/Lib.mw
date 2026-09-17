@@ -1,0 +1,17 @@
+-- sha2: the SHA-2 hash functions of FIPS 180-4. A port of Rust's `sha2`
+-- crate, version 0.10.9.
+--
+--   use sha2 (sha256, toHex)
+--
+--   toHex (sha256 (stringToBytes "abc"))
+--     -- "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+
+mod Tables
+mod Sha2
+@cfg(test)
+mod Cases
+@cfg(test)
+mod Tests
+
+@pub use sha2.Sha2
+@pub use sha2.Sha2.Algorithm.*

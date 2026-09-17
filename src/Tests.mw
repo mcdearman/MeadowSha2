@@ -1,0 +1,95 @@
+-- The port against the crate: every message in `Cases.mw`, whose expected
+-- digests came from calling sha2 itself, plus the FIPS 180-4 examples.
+--
+-- Every declaration carries `@cfg(test)`, as the tests are no part of the
+-- package.
+
+@cfg(test)
+use Std.Test (assertEq)
+@cfg(test)
+use Std.Collections.Vector as V
+@cfg(test)
+use Std.St as St
+@cfg(test)
+use sha2.Cases (cases)
+@cfg(test)
+use sha2.Sha2
+@cfg(test)
+use sha2.Sha2.Algorithm.*
+
+@cfg(test)
+fun digit i = toInt (stringByteAt cases i) - 48
+
+@cfg(test)
+fun num i n =
+  let rec go k acc = if k >= n then acc else go (k + 1) (acc * 64 + digit (i + k)) in
+  (go 0 0, i + n)
+
+@cfg(test)
+fun str i =
+  let len = fst (num i 3) in
+  (stringSlice cases (i + 3) (i + 3 + len), i + 3 + len)
+
+@cfg(test)
+fun hexValue c = if c <= 57 then c - 48 else c - 87
+
+@cfg(test)
+fun unhex s =
+  runSt (\() ->
+    let n = stringByteLength s / 2 in
+    let buf = St.newArray n (toUInt8 0) in
+    let at = \i -> hexValue (toInt (stringByteAt s i)) in
+    let _ = St.forRange 0 n (\k -> St.set buf k (toUInt8 (at (2 * k) * 16 + at (2 * k + 1)))) in
+    St.freeze buf)
+
+@cfg(test)
+def algorithms = [Sha224, Sha256, Sha384, Sha512, Sha512t224, Sha512t256]
+
+@cfg(test)
+fun runCase i =
+  let input = str i in
+  let split = num (snd input) 3 in
+  let rec readDigests k at acc =
+    if k >= 6
+    then (acc, at)
+    else
+      let d = str at in
+      readDigests (k + 1) (snd d) (V.pushBack acc (fst d))
+  in
+  let expected = readDigests 0 (snd split) V.empty in
+  let b = unhex (fst input) in
+  let whole = V.map (\alg -> toHex (digest alg b)) algorithms in
+  let n = arrayLen b in
+  let pieces =
+    V.map
+      (\alg -> toHex (finalize (update (update (new alg) (arraySlice b 0 (fst split))) (arraySlice b (fst split) n))))
+      algorithms
+  in
+  (fst input, (fst expected, fst expected), (whole, pieces), snd expected)
+
+@cfg(test)
+fun check i bad =
+  if i >= stringByteLength cases
+  then bad
+  else
+    match runCase i with
+    | (input, expected, got, next) ->
+        check next (if expected == got then bad else V.pushBack bad (input, expected, got))
+
+-- Failures list (message, expected, actual), each digest whole and in pieces.
+@cfg(test)
+@test fun digestsMatchTheCrate () =
+  assertEq (V.take (check 0 V.empty) 2) [] "messages the port and sha2 hash differently"
+
+@cfg(test)
+@test fun fipsExamples () =
+  let abc = stringToBytes "abc" in
+  let a = assertEq (toHex (sha256 abc)) "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" "SHA-256" in
+  let b = assertEq (toHex (sha224 abc)) "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7" "SHA-224" in
+  assertEq
+    (toHex (sha512 abc))
+    (
+      "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a"
+        ++ "2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f"
+    )
+    "SHA-512"
