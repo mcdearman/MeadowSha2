@@ -6,7 +6,7 @@
 
 use Std.St as St
 use Std.Collections.Vector as V
-use sha2.Tables
+use Sha2.Tables
 
 -- --- words ------------------------------------------------------------------------------
 

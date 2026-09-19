@@ -11,11 +11,11 @@ use Std.Collections.Vector as V
 @cfg(test)
 use Std.St as St
 @cfg(test)
-use sha2.Cases (cases)
+use Sha2.Cases (cases)
 @cfg(test)
-use sha2.Sha2
+use Sha2.Sha2
 @cfg(test)
-use sha2.Sha2.Algorithm.*
+use Sha2.Sha2.Algorithm.*
 
 @cfg(test)
 fun digit i = toInt (stringByteAt cases i) - 48

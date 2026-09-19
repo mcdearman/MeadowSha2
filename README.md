@@ -11,13 +11,13 @@ This package is a port of Rust's [`sha2`](https://github.com/RustCrypto/hashes)
 ## Install
 
 ```sh
-meadow add mcdearman/meadow-sha2
+meadow add mcdearman/MeadowSha2
 ```
 
 ## Use
 
 ```meadow
-use sha2 (sha256, digestString, toHex, Sha512t256)
+use Sha2 (sha256, digestString, toHex, Sha512t256)
 
 def main =
   ( toHex (sha256 (stringToBytes "abc")),
