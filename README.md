@@ -11,7 +11,7 @@ This package is a port of Rust's [`sha2`](https://github.com/RustCrypto/hashes)
 ## Install
 
 ```sh
-meadow add mcdearman/MeadowSha2
+meadow add mcdearman/Sha2
 ```
 
 ## Use
